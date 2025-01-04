@@ -1,0 +1,14 @@
+--- brotli-1.0.9/c/dec/bit_reader.h.RHEL-32153-kBrotliBitMask-bounds	2020-08-27 16:12:55.000000000 +0200
++++ brotli-1.0.9/c/dec/bit_reader.h	2024-09-11 12:42:29.143308077 +0200
+@@ -28,8 +28,10 @@ static BROTLI_INLINE uint32_t BitMask(ui
+     /* Masking with this expression turns to a single
+        "Unsigned Bit Field Extract" UBFX instruction on ARM. */
+     return ~((0xFFFFFFFFu) << n);
+-  } else {
++  } else if (n < 33) {
+     return kBrotliBitMask[n];
++  } else {
++    return 0;
+   }
+ }
+ 
