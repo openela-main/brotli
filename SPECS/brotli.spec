@@ -1,6 +1,6 @@
 Name:           brotli
 Version:        1.0.9
-Release:        7%{?dist}
+Release:        9%{?dist}
 Summary:        Lossless compression algorithm
 
 License:        MIT
@@ -8,7 +8,8 @@ URL:            https://github.com/google/brotli
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 Patch0:        09b0992b6acb7faa6fd3b23f9bc036ea117230fc.patch
-Patch1:         RHEL-32153-kBrotliBitMask-bounds.patch
+Patch1:        RHEL-32153-kBrotliBitMask-bounds.patch
+Patch2:        CVE-2025-6176.patch
 
 %if 0%{?rhel} == 7
 BuildRequires:  devtoolset-7-toolchain, devtoolset-7-libatomic-devel
@@ -140,6 +141,14 @@ done
 
 
 %changelog
+* Tue Jan 20 2026 Parag Nemade <pnemade AT redhat DOT com> - 1.0.9-9
+- Resolves: RHEL-133995
+  Rebuild for CVE-2025-6176 Brotli decompression bomb DoS in scrapy
+
+* Sun Jan 18 2026 Parag Nemade <pnemade AT redhat DOT com> - 1.0.9-8
+- Resolves: RHEL-133995
+  CVE-2025-6176 Brotli decompression bomb DoS in scrapy
+
 * Wed Sep 11 2024 Eike Rathke <erack@redhat.com> - 1.0.9-7
 - Check BitMask(n) n value for kBrotliBitMask[n] bounds
 
