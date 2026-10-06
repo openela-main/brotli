@@ -1,6 +1,6 @@
 Name:           brotli
 Version:        1.1.0
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Lossless compression algorithm
 
 License:        MIT
@@ -11,6 +11,9 @@ Patch1:         RHEL-32153-kBrotliBitMask-bounds.patch
 # Modified patch from upstream https://github.com/google/brotli/pull/1234/
 # dropped binary part of updating test files from this patch
 Patch2:          CVE-2025-6176-brotli-1234.patch
+# Accept output_buffer_limit as an alias for max_output_length
+# in Decompressor.process() for forward compatibility with upstream 1.2.0
+Patch3:          output_buffer_limit-alias.patch
 
 %if 0%{?rhel} == 7
 BuildRequires:  devtoolset-7-toolchain, devtoolset-7-libatomic-devel
@@ -153,6 +156,11 @@ done
 
 
 %changelog
+* Mon Jul 27 2026 Miro Hrončok <mhroncok@redhat.com> - 1.1.0-8
+- Accept output_buffer_limit as an alias for max_output_length
+  in Decompressor.process() for forward compatibility with upstream 1.2.0
+- Resolves: RHEL-221151
+
 * Thu Dec 18 2025 Parag Nemade <pnemade AT redhat DOT com> - 1.1.0-7
 - Resolves: RHEL-133984
   CVE-2025-6176 Brotli decompression bomb DoS in scrapy

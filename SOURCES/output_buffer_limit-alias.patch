@@ -1,0 +1,90 @@
+diff --git a/python/_brotli.c b/python/_brotli.c
+index f86b04f..bd1486b 100644
+--- a/python/_brotli.c
++++ b/python/_brotli.c
+@@ -742,15 +742,15 @@ PyDoc_STRVAR(brotli_Decompressor_process_doc,
+ "Some or all of the input may be kept in internal buffers for later \n"
+ "processing, and the decompressed output data may be empty until enough input \n"
+ "has been accumulated.\n"
+-"If max_output_length is set, no more than max_output_length bytes will be\n"
+-"returned. If the limit is reached, further calls to process (potentially with\n"
+-"empty input) will continue to yield more data. If, after returning a string of\n"
+-"the length equal to limit, can_accept_more_data() returns False, process()\n"
+-"must only be called with empty input until can_accept_more_data() once again\n"
+-"returns True.\n"
++"If max_output_length (or its alias output_buffer_limit) is set, no more\n"
++"than that many bytes will be returned. If the limit is reached, further\n"
++"calls to process (potentially with empty input) will continue to yield\n"
++"more data. If, after returning a string of the length equal to limit,\n"
++"can_accept_more_data() returns False, process() must only be called with\n"
++"empty input until can_accept_more_data() once again returns True.\n"
+ "\n"
+ "Signature:\n"
+-"  decompress(string, max_output_length=int)\n"
++"  decompress(string, max_output_length=int, output_buffer_limit=int)\n"
+ "\n"
+ "Args:\n"
+ "  string (bytes): The input data\n"
+@@ -765,21 +765,30 @@ static PyObject* brotli_Decompressor_process(brotli_Decompressor *self, PyObject
+   Py_buffer input;
+   int ok;
+   Py_ssize_t max_output_length = PY_SSIZE_T_MAX;
++  Py_ssize_t output_buffer_limit = PY_SSIZE_T_MAX;
+   uint8_t* data;
+   size_t data_length;
+ 
+-  static char* kwlist[] = { "", "max_output_length", NULL };
++  static char* kwlist[] = { "", "max_output_length", "output_buffer_limit", NULL };
+ 
+ #if PY_MAJOR_VERSION >= 3
+-  ok = PyArg_ParseTupleAndKeywords(args, keywds, "y*|n:process", kwlist, &input, &max_output_length);
++  ok = PyArg_ParseTupleAndKeywords(args, keywds, "y*|nn:process", kwlist, &input, &max_output_length, &output_buffer_limit);
+ #else
+-  ok = PyArg_ParseTupleAndKeywords(args, keywds, "s*|n:process", kwlist, &input, &max_output_length);
++  ok = PyArg_ParseTupleAndKeywords(args, keywds, "s*|nn:process", kwlist, &input, &max_output_length, &output_buffer_limit);
+ #endif
+ 
+   if (!ok) {
+     return NULL;
+   }
+ 
++  if (max_output_length != PY_SSIZE_T_MAX && output_buffer_limit != PY_SSIZE_T_MAX) {
++    PyErr_SetString(PyExc_TypeError, "max_output_length and output_buffer_limit are mutually exclusive");
++    return NULL;
++  }
++  if (output_buffer_limit != PY_SSIZE_T_MAX) {
++    max_output_length = output_buffer_limit;
++  }
++
+   if (!self->dec) {
+     goto error;
+   }
+diff --git a/python/tests/decompressor_test.py b/python/tests/decompressor_test.py
+index 09a76f3..155b2fe 100644
+--- a/python/tests/decompressor_test.py
++++ b/python/tests/decompressor_test.py
+@@ -85,6 +85,24 @@ class TestDecompressor(_test_utils.TestCase):
+                 out_file.write(self.decompressor.process(compressed[-1:]))
+         self._check_decompression(test_data)
+ 
++    def test_output_buffer_limit_alias(self):
++        """Test that output_buffer_limit works as an alias for max_output_length."""
++        data = brotli.compress(b'a' * 1000)
++        result = self.decompressor.process(data, output_buffer_limit=100)
++        self.assertTrue(len(result) <= 100)
++
++    def test_max_output_length_positional(self):
++        """Test that max_output_length still works as a positional argument."""
++        data = brotli.compress(b'a' * 1000)
++        result = self.decompressor.process(data, 100)
++        self.assertTrue(len(result) <= 100)
++
++    def test_both_limit_args_raises(self):
++        """Test that passing both max_output_length and output_buffer_limit raises."""
++        data = brotli.compress(b'a' * 100)
++        with self.assertRaises(TypeError):
++            self.decompressor.process(data, max_output_length=50, output_buffer_limit=50)
++
+     def test_garbage_appended(self):
+         with self.assertRaises(brotli.error):
+             self.decompressor.process(brotli.compress(b'a') + b'a')
