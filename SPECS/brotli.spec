@@ -7,7 +7,7 @@
 
 Name:           brotli
 Version:        1.0.6
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Lossless compression algorithm
 
 License:        MIT
@@ -16,6 +16,8 @@ Source0:        https://github.com/google/brotli/archive/v%{version}.tar.gz
 
 Patch1:         rhbz1881156.patch
 Patch2:         CVE-2025-6176.patch
+# https://github.com/google/brotli/commit/50a9b70a4d5e1443fc40927952276b68fffa83a0
+Patch3:         CVE-2026-111497.patch
 
 %if %{with python2}
 BuildRequires:  python2-devel
@@ -152,6 +154,10 @@ cd ..
 
 
 %changelog
+* Thu Oct 22 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 1.0.6-5
+- Resolves: RHEL-290271
+- CVE-2026-111497 brotli: Out-of-Bounds Write in Google Brotli Decoder
+
 * Wed Jan 28 2026 Parag Nemade <pnemade AT redhat DOT com> - 1.0.6-4
 - Resolves: RHEL-133986
   CVE-2025-6176 Brotli decompression bomb DoS in scrapy
