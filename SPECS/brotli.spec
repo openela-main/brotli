@@ -1,6 +1,6 @@
 Name:           brotli
 Version:        1.0.9
-Release:        10%{?dist}
+Release:        10%{?dist}.1
 Summary:        Lossless compression algorithm
 
 License:        MIT
@@ -13,6 +13,8 @@ Patch2:        CVE-2025-6176.patch
 # Accept output_buffer_limit as an alias for max_output_length
 # in Decompressor.process() for forward compatibility with upstream 1.2.0
 Patch3:        output_buffer_limit-alias.patch
+# https://github.com/google/brotli/commit/50a9b70a4d5e1443fc40927952276b68fffa83a0
+Patch4:        CVE-2026-111497.patch
 
 %if 0%{?rhel} == 7
 BuildRequires:  devtoolset-7-toolchain, devtoolset-7-libatomic-devel
@@ -144,6 +146,10 @@ done
 
 
 %changelog
+* Thu Oct 22 2026 RHEL Packaging Agent <redhat-ymir-agent@redhat.com> - 1.0.9-10.1
+- CVE-2026-111497 brotli: Out-of-Bounds Write in Google Brotli Decoder
+- Resolves: RHEL-290294
+
 * Mon Jul 27 2026 Miro Hrončok <mhroncok@redhat.com> - 1.0.9-10
 - Accept output_buffer_limit as an alias for max_output_length
   in Decompressor.process() for forward compatibility with upstream 1.2.0
